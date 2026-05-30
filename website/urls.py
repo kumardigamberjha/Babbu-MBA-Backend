@@ -7,7 +7,8 @@ from .views import (
     RegisterView,
     LoginView,
     LogoutView,
-    UserProfileView
+    UserProfileView,
+    ChatbotView
 )
 
 router = DefaultRouter()
@@ -21,5 +22,6 @@ urlpatterns = [
     path('api/auth/login/', LoginView.as_view(), name='auth-login'),
     path('api/auth/logout/', LogoutView.as_view(), name='auth-logout'),
     path('api/auth/me/', UserProfileView.as_view(), name='auth-me'),
+    path('api/chat/', ChatbotView.as_view(), name='chatbot'),
 ]
 

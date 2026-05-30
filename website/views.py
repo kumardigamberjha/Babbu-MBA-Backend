@@ -16,6 +16,9 @@ from .serializers import (
     RegisterSerializer,
 )
 
+import os
+from groq import Groq
+
 class CourseViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows Courses to be viewed or edited.
@@ -160,4 +163,60 @@ class UserProfileView(APIView):
     def get(self, request, *args, **kwargs):
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ChatbotView(APIView):
+    """
+    API endpoint to handle Chatbot queries about MBA topics using the Groq API.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        messages = request.data.get('messages', [])
+        
+        if not messages:
+            return Response(
+                {"error": "Please provide a 'messages' list."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        groq_api_key = os.environ.get('GROQ_API_KEY')
+        if not groq_api_key or groq_api_key == 'your_groq_api_key_here':
+            return Response(
+                {"error": "Groq API key not configured on the server."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        try:
+            client = Groq(api_key=groq_api_key)
+            
+            system_prompt = {
+                "role": "system",
+                "content": "You are a highly knowledgeable and professional MBA tutor and assistant. Your goal is to help users understand complex business, finance, marketing, and management concepts. Use clear, concise language and provide examples where helpful. If a user asks something completely unrelated to business/MBA topics, politely redirect them back to MBA subjects."
+            }
+            
+            # Prepend system prompt
+            api_messages = [system_prompt] + messages
+            
+            chat_completion = client.chat.completions.create(
+                messages=api_messages,
+                model="llama-3.3-70b-versatile", # Strong model for knowledge tasks
+                temperature=0.7,
+                max_tokens=1024,
+            )
+            
+            response_content = chat_completion.choices[0].message.content
+            
+            return Response(
+                {
+                    "response": response_content
+                }, 
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 
