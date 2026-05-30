@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission, SAFE_METHODS
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from django.contrib.auth import authenticate
@@ -19,11 +19,21 @@ from .serializers import (
 import os
 from groq import Groq
 
+class IsAdminOrReadOnly(BasePermission):
+    """
+    The request is authenticated as a user, or is a read-only request.
+    """
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+        return bool(request.user and request.user.is_staff)
+
 class CourseViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows Courses to be viewed or edited.
     """
     queryset = Course.objects.all()
+    permission_classes = [IsAdminOrReadOnly]
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
@@ -36,6 +46,8 @@ class ChapterViewSet(viewsets.ModelViewSet):
     API endpoint that allows Chapters to be viewed or edited.
     Filter by course using: ?course=<course_id>
     """
+    permission_classes = [IsAdminOrReadOnly]
+    
     def get_queryset(self):
         queryset = Chapter.objects.all()
         course_id = self.request.query_params.get('course')
@@ -54,6 +66,8 @@ class TopicViewSet(viewsets.ModelViewSet):
     API endpoint that allows Topics to be viewed or edited.
     Filter by chapter using: ?chapter=<chapter_id>
     """
+    permission_classes = [IsAdminOrReadOnly]
+
     def get_queryset(self):
         queryset = Topic.objects.all()
         chapter_id = self.request.query_params.get('chapter')
