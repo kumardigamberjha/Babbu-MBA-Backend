@@ -140,12 +140,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-]
-
 # Create standard directories if they don't exist
 # os.makedirs(BASE_DIR / 'static', exist_ok=True)
 os.makedirs(BASE_DIR / 'templates', exist_ok=True)
@@ -153,6 +147,8 @@ os.makedirs(BASE_DIR / 'media', exist_ok=True)
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Django 6.0 REQUIRES this exact dictionary format
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
